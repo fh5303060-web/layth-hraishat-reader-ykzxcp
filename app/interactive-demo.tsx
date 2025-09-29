@@ -3,12 +3,24 @@ import { IconSymbol } from "@/components/IconSymbol";
 import { Stack, router } from "expo-router";
 import { Button } from "@/components/button";
 import { commonStyles, colors } from "@/styles/commonStyles";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollView, StyleSheet, View, Text, Pressable, Animated } from "react-native";
+import { soundManager } from "@/utils/soundManager";
+import * as Haptics from "expo-haptics";
 
 export default function InteractiveDemoScreen() {
   const [selectedDemo, setSelectedDemo] = useState<string | null>(null);
   const [animationValue] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    // Initialize sound manager when component mounts
+    soundManager.initialize();
+    
+    // Cleanup when component unmounts
+    return () => {
+      soundManager.cleanup();
+    };
+  }, []);
 
   const demos = [
     {
@@ -18,6 +30,7 @@ export default function InteractiveDemoScreen() {
       example: "مثل انتشار قطرة الحبر في الماء",
       color: "#4CAF50",
       icon: "arrow.right.circle",
+      soundType: "diffusion" as const,
       steps: [
         "ضع قطرة حبر في كأس ماء",
         "لاحظ انتشار اللون تدريجياً",
@@ -32,6 +45,7 @@ export default function InteractiveDemoScreen() {
       example: "مثل وضع الخيار في الماء المالح",
       color: "#2196F3",
       icon: "drop.circle",
+      soundType: "osmosis" as const,
       steps: [
         "ضع قطعة خيار في ماء مالح",
         "لاحظ انكماش الخيار بعد فترة",
@@ -46,6 +60,7 @@ export default function InteractiveDemoScreen() {
       example: "مثل خياشيم الأسماك التي تزيل الملح",
       color: "#FF9800",
       icon: "bolt.circle",
+      soundType: "active" as const,
       steps: [
         "الخلايا تستخدم الطاقة (ATP)",
         "تنقل المواد من التركيز المنخفض للعالي",
@@ -70,13 +85,31 @@ export default function InteractiveDemoScreen() {
     ]).start();
   };
 
+  const handleDemoPress = async (demo: typeof demos[0]) => {
+    try {
+      // Play haptic feedback
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      
+      // Play transport sound
+      await soundManager.playTransportSound(demo.soundType);
+      
+      // Toggle selection and start animation
+      setSelectedDemo(selectedDemo === demo.id ? null : demo.id);
+      startAnimation();
+      
+      console.log(`Selected demo: ${demo.title} with sound: ${demo.soundType}`);
+    } catch (error) {
+      console.log('Error handling demo press:', error);
+      // Still allow the UI interaction even if sound fails
+      setSelectedDemo(selectedDemo === demo.id ? null : demo.id);
+      startAnimation();
+    }
+  };
+
   const renderDemo = (demo: typeof demos[0]) => (
     <View key={demo.id} style={[styles.demoCard, { borderColor: demo.color }]}>
       <Pressable
-        onPress={() => {
-          setSelectedDemo(selectedDemo === demo.id ? null : demo.id);
-          startAnimation();
-        }}
+        onPress={() => handleDemoPress(demo)}
         style={styles.demoHeader}
       >
         <View style={[styles.demoIcon, { backgroundColor: demo.color }]}>
@@ -86,6 +119,12 @@ export default function InteractiveDemoScreen() {
           <Text style={styles.demoTitle}>{demo.title}</Text>
           <Text style={styles.demoDescription}>{demo.description}</Text>
           <Text style={styles.demoExample}>{demo.example}</Text>
+          
+          {/* Sound indicator */}
+          <View style={styles.soundIndicator}>
+            <IconSymbol name="speaker.wave.2" color={demo.color} size={16} />
+            <Text style={[styles.soundText, { color: demo.color }]}>مع الصوت التفاعلي</Text>
+          </View>
         </View>
         <IconSymbol 
           name={selectedDemo === demo.id ? "chevron.up" : "chevron.down"} 
@@ -136,6 +175,27 @@ export default function InteractiveDemoScreen() {
             />
             <Text style={styles.animationLabel}>محاكاة الحركة</Text>
           </View>
+
+          {/* Sound Control Panel */}
+          <View style={styles.soundControlPanel}>
+            <Text style={styles.soundControlTitle}>التحكم في الصوت</Text>
+            <View style={styles.soundButtons}>
+              <Pressable
+                style={[styles.soundControlButton, { backgroundColor: demo.color }]}
+                onPress={() => soundManager.playTransportSound(demo.soundType)}
+              >
+                <IconSymbol name="play.circle" color="white" size={20} />
+                <Text style={styles.soundControlButtonText}>تشغيل</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.soundControlButton, { backgroundColor: '#666' }]}
+                onPress={() => soundManager.stopAllSounds()}
+              >
+                <IconSymbol name="stop.circle" color="white" size={20} />
+                <Text style={styles.soundControlButtonText}>إيقاف</Text>
+              </Pressable>
+            </View>
+          </View>
         </Animated.View>
       )}
     </View>
@@ -166,6 +226,12 @@ export default function InteractiveDemoScreen() {
             <Text style={styles.pageDescription}>
               اكتشف طرق النقل عبر الغشاء البيلازمي من خلال التجارب العملية
             </Text>
+            
+            {/* Sound Feature Highlight */}
+            <View style={styles.soundFeatureHighlight}>
+              <IconSymbol name="speaker.wave.3" color="#1565C0" size={24} />
+              <Text style={styles.soundFeatureText}>تجارب تفاعلية مع أصوات تعليمية مميزة</Text>
+            </View>
           </View>
 
           {/* Interactive Demos */}
@@ -186,6 +252,12 @@ export default function InteractiveDemoScreen() {
               <IconSymbol name="exclamationmark.triangle" color="#EF5350" size={24} />
               <Text style={styles.tipText}>
                 تذكر أن النقل النشط يحتاج طاقة بينما الانتشار والاسموزية لا يحتاجان
+              </Text>
+            </View>
+            <View style={styles.tipCard}>
+              <IconSymbol name="speaker.wave.2" color="#4CAF50" size={24} />
+              <Text style={styles.tipText}>
+                استمع للأصوات المختلفة لكل طريقة نقل لتمييزها بسهولة
               </Text>
             </View>
           </View>
@@ -245,6 +317,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     writingDirection: 'rtl',
+    marginBottom: 16,
+  },
+  soundFeatureHighlight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(21, 101, 192, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(21, 101, 192, 0.3)',
+  },
+  soundFeatureText: {
+    fontSize: 15,
+    color: '#1565C0',
+    marginLeft: 12,
+    fontWeight: '600',
+    writingDirection: 'rtl',
   },
   demosSection: {
     marginBottom: 24,
@@ -295,6 +385,18 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'right',
     writingDirection: 'rtl',
+    marginBottom: 8,
+  },
+  soundIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  soundText: {
+    fontSize: 12,
+    marginLeft: 4,
+    fontWeight: '500',
+    writingDirection: 'rtl',
   },
   demoSteps: {
     padding: 20,
@@ -342,6 +444,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
     borderRadius: 12,
+    marginBottom: 16,
   },
   animatedParticle: {
     width: 20,
@@ -353,6 +456,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
+    writingDirection: 'rtl',
+  },
+  soundControlPanel: {
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+  },
+  soundControlTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    textAlign: 'center',
+    marginBottom: 12,
+    writingDirection: 'rtl',
+  },
+  soundButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  soundControlButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.2)',
+    elevation: 3,
+  },
+  soundControlButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 6,
     writingDirection: 'rtl',
   },
   tipsSection: {

@@ -1,15 +1,27 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Stack, router } from "expo-router";
 import { ScrollView, StyleSheet, View, Text, Pressable, ImageBackground, Image } from "react-native";
 import { IconSymbol } from "@/components/IconSymbol";
 import { Button } from "@/components/button";
 import { commonStyles, colors } from "@/styles/commonStyles";
+import { soundManager } from "@/utils/soundManager";
+import * as Haptics from "expo-haptics";
 
 const ICON_COLOR = "#007AFF";
 
 export default function HomeScreen() {
   const [selectedTransport, setSelectedTransport] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Initialize sound manager when component mounts
+    soundManager.initialize();
+    
+    // Cleanup when component unmounts
+    return () => {
+      soundManager.cleanup();
+    };
+  }, []);
 
   // Arabic content for transport methods based on the educational material
   const transportMethods = [
@@ -21,7 +33,8 @@ export default function HomeScreen() {
       direction: "من الوسط الأعلى تركيز إلى الوسط الأقل تركيز",
       materials: "الأكسجين وثاني أكسيد الكربون",
       color: "#4CAF50",
-      icon: "arrow.right.circle"
+      icon: "arrow.right.circle",
+      soundType: "diffusion" as const
     },
     {
       id: "osmosis",
@@ -31,7 +44,8 @@ export default function HomeScreen() {
       direction: "من الوسط الأقل تركيز إلى الوسط الأعلى تركيز بالمواد الذائبة",
       materials: "الماء",
       color: "#2196F3",
-      icon: "drop.circle"
+      icon: "drop.circle",
+      soundType: "osmosis" as const
     },
     {
       id: "active",
@@ -41,15 +55,35 @@ export default function HomeScreen() {
       direction: "من الوسط الأقل تركيز إلى الوسط الأعلى تركيز",
       materials: "بعض الأملاح كالصوديوم",
       color: "#FF9800",
-      icon: "bolt.circle"
+      icon: "bolt.circle",
+      soundType: "active" as const
     }
   ];
+
+  const handleTransportMethodPress = async (method: typeof transportMethods[0]) => {
+    try {
+      // Play haptic feedback
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      
+      // Play transport sound
+      await soundManager.playTransportSound(method.soundType);
+      
+      // Toggle selection
+      setSelectedTransport(selectedTransport === method.id ? null : method.id);
+      
+      console.log(`Selected transport method: ${method.title} with sound: ${method.soundType}`);
+    } catch (error) {
+      console.log('Error handling transport method press:', error);
+      // Still allow the UI interaction even if sound fails
+      setSelectedTransport(selectedTransport === method.id ? null : method.id);
+    }
+  };
 
   const renderTransportMethod = (method: typeof transportMethods[0]) => (
     <Pressable
       key={method.id}
       style={[styles.methodCard, { borderColor: method.color }]}
-      onPress={() => setSelectedTransport(selectedTransport === method.id ? null : method.id)}
+      onPress={() => handleTransportMethodPress(method)}
     >
       <View style={styles.methodHeader}>
         <View style={[styles.methodIcon, { backgroundColor: method.color }]}>
@@ -58,6 +92,10 @@ export default function HomeScreen() {
         <View style={styles.methodInfo}>
           <Text style={styles.methodTitle}>{method.title}</Text>
           <Text style={styles.methodSubtitle}>{method.subtitle}</Text>
+          <View style={styles.soundIndicator}>
+            <IconSymbol name="speaker.wave.2" color={method.color} size={16} />
+            <Text style={[styles.soundText, { color: method.color }]}>اضغط للاستماع</Text>
+          </View>
         </View>
         <IconSymbol 
           name={selectedTransport === method.id ? "chevron.up" : "chevron.down"} 
@@ -79,6 +117,17 @@ export default function HomeScreen() {
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>مثال:</Text>
             <Text style={styles.detailText}>{method.description}</Text>
+          </View>
+          
+          {/* Sound Control */}
+          <View style={styles.soundControls}>
+            <Pressable
+              style={[styles.soundButton, { backgroundColor: method.color }]}
+              onPress={() => soundManager.playTransportSound(method.soundType)}
+            >
+              <IconSymbol name="play.circle" color="white" size={20} />
+              <Text style={styles.soundButtonText}>تشغيل الصوت</Text>
+            </Pressable>
           </View>
         </View>
       )}
@@ -138,11 +187,18 @@ export default function HomeScreen() {
             <Text style={styles.headerDescription}>
               استكشف عالم آليات النقل عبر الأغشية الخلوية الرائع
             </Text>
+            
+            {/* Sound Feature Indicator */}
+            <View style={styles.soundFeatureIndicator}>
+              <IconSymbol name="speaker.wave.3" color="#1565C0" size={20} />
+              <Text style={styles.soundFeatureText}>تطبيق تفاعلي مع الأصوات التعليمية</Text>
+            </View>
           </View>
 
           {/* Transport Methods */}
           <View style={styles.methodsSection}>
             <Text style={styles.sectionTitle}>طرق النقل</Text>
+            <Text style={styles.sectionSubtitle}>اضغط على كل طريقة لسماع صوتها المميز</Text>
             {transportMethods.map(renderTransportMethod)}
           </View>
 
@@ -232,6 +288,23 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     paddingHorizontal: 20,
     writingDirection: 'rtl',
+    marginBottom: 12,
+  },
+  soundFeatureIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(21, 101, 192, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  soundFeatureText: {
+    fontSize: 14,
+    color: '#1565C0',
+    marginLeft: 8,
+    fontWeight: '500',
+    writingDirection: 'rtl',
   },
   methodsSection: {
     padding: 20,
@@ -240,9 +313,17 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1565C0',
+    marginBottom: 8,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
+  sectionSubtitle: {
+    fontSize: 16,
+    color: '#666',
     marginBottom: 20,
     textAlign: 'center',
     writingDirection: 'rtl',
+    fontStyle: 'italic',
   },
   methodCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -282,6 +363,18 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'right',
     writingDirection: 'rtl',
+    marginBottom: 4,
+  },
+  soundIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  soundText: {
+    fontSize: 12,
+    marginLeft: 4,
+    fontWeight: '500',
+    writingDirection: 'rtl',
   },
   methodDetails: {
     marginTop: 16,
@@ -305,6 +398,26 @@ const styles = StyleSheet.create({
     color: '#424242',
     lineHeight: 22,
     textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  soundControls: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  soundButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.2)',
+    elevation: 4,
+  },
+  soundButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
     writingDirection: 'rtl',
   },
   actionsSection: {
