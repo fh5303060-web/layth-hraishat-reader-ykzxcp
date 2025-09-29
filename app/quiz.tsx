@@ -92,6 +92,9 @@ export default function QuizScreen() {
 
   const handleAnswerSelect = async (answerIndex: number) => {
     try {
+      // Play click sound first
+      await soundManager.playClickSound();
+      
       const newSelectedAnswers = [...selectedAnswers];
       newSelectedAnswers[currentQuestion] = answerIndex;
       setSelectedAnswers(newSelectedAnswers);
@@ -101,16 +104,24 @@ export default function QuizScreen() {
 
       // Check if answer is correct and play appropriate sound
       const isCorrect = answerIndex === questions[currentQuestion].correctAnswer;
-      if (isCorrect) {
-        // Play the transport method sound for correct answer
-        await soundManager.playTransportSound(questions[currentQuestion].soundType);
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        console.log('Correct answer! Playing transport sound:', questions[currentQuestion].soundType);
-      } else {
-        // Play error feedback for incorrect answer
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        console.log('Incorrect answer selected');
-      }
+      
+      // Delay to let click sound finish
+      setTimeout(async () => {
+        if (isCorrect) {
+          // Play success sound first, then transport method sound
+          await soundManager.playSuccessSound();
+          setTimeout(async () => {
+            await soundManager.playTransportSound(questions[currentQuestion].soundType);
+          }, 400);
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          console.log('Correct answer! Playing success + transport sound:', questions[currentQuestion].soundType);
+        } else {
+          // Play error sound for incorrect answer
+          await soundManager.playErrorSound();
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          console.log('Incorrect answer selected');
+        }
+      }, 200);
     } catch (error) {
       console.log('Error handling answer selection:', error);
       // Still update the UI even if sound fails
@@ -120,18 +131,24 @@ export default function QuizScreen() {
     }
   };
 
-  const handleNext = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      setShowResults(true);
-    }
+  const handleNext = async () => {
+    await soundManager.playClickSound();
+    setTimeout(() => {
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+      } else {
+        setShowResults(true);
+      }
+    }, 200);
   };
 
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-    }
+  const handlePrevious = async () => {
+    await soundManager.playClickSound();
+    setTimeout(() => {
+      if (currentQuestion > 0) {
+        setCurrentQuestion(currentQuestion - 1);
+      }
+    }, 200);
   };
 
   const calculateScore = () => {
@@ -144,10 +161,13 @@ export default function QuizScreen() {
     return correct;
   };
 
-  const resetQuiz = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswers([]);
-    setShowResults(false);
+  const resetQuiz = async () => {
+    await soundManager.playClickSound();
+    setTimeout(() => {
+      setCurrentQuestion(0);
+      setSelectedAnswers([]);
+      setShowResults(false);
+    }, 200);
   };
 
   const getScoreColor = () => {
@@ -201,12 +221,33 @@ export default function QuizScreen() {
                 </Text>
               </View>
 
-              {/* Sound Feature Info */}
+              {/* Enhanced Sound Feature Info */}
               <View style={styles.soundFeatureInfo}>
                 <IconSymbol name="speaker.wave.3" color="#1565C0" size={24} />
                 <Text style={styles.soundFeatureText}>
-                  لاحظت الأصوات المختلفة لكل طريقة نقل عند الإجابة الصحيحة؟
+                  لاحظت الأصوات المختلفة؟ نقر + نجاح/خطأ + صوت طريقة النقل للإجابات الصحيحة
                 </Text>
+              </View>
+
+              {/* Sound Legend */}
+              <View style={styles.soundLegend}>
+                <Text style={styles.soundLegendTitle}>دليل الأصوات المستخدمة:</Text>
+                <View style={styles.soundLegendItem}>
+                  <IconSymbol name="hand.tap" color="#FF9800" size={16} />
+                  <Text style={styles.soundLegendText}>صوت النقر: عند اختيار الإجابة</Text>
+                </View>
+                <View style={styles.soundLegendItem}>
+                  <IconSymbol name="checkmark.circle" color="#4CAF50" size={16} />
+                  <Text style={styles.soundLegendText}>صوت النجاح: للإجابة الصحيحة</Text>
+                </View>
+                <View style={styles.soundLegendItem}>
+                  <IconSymbol name="xmark.circle" color="#F44336" size={16} />
+                  <Text style={styles.soundLegendText}>صوت الخطأ: للإجابة الخاطئة</Text>
+                </View>
+                <View style={styles.soundLegendItem}>
+                  <IconSymbol name="waveform" color="#1565C0" size={16} />
+                  <Text style={styles.soundLegendText}>صوت طريقة النقل: للإجابات الصحيحة</Text>
+                </View>
               </View>
 
               {/* Detailed Results */}
@@ -234,16 +275,31 @@ export default function QuizScreen() {
                       <Text style={styles.resultQuestion}>{question.question}</Text>
                       <Text style={styles.resultExplanation}>{question.explanation}</Text>
                       
-                      {/* Sound replay button for correct answers */}
-                      {isCorrect && (
+                      {/* Enhanced Sound replay buttons */}
+                      <View style={styles.soundReplaySection}>
+                        {isCorrect && (
+                          <Pressable
+                            style={styles.soundReplayButton}
+                            onPress={async () => {
+                              await soundManager.playClickSound();
+                              setTimeout(async () => {
+                                await soundManager.playSuccessSound();
+                                setTimeout(() => soundManager.playTransportSound(question.soundType), 400);
+                              }, 200);
+                            }}
+                          >
+                            <IconSymbol name="speaker.wave.2" color="#4CAF50" size={16} />
+                            <Text style={styles.soundReplayText}>إعادة تشغيل أصوات الإجابة الصحيحة</Text>
+                          </Pressable>
+                        )}
                         <Pressable
-                          style={styles.soundReplayButton}
-                          onPress={() => soundManager.playTransportSound(question.soundType)}
+                          style={[styles.soundReplayButton, { backgroundColor: 'rgba(255, 152, 0, 0.1)' }]}
+                          onPress={() => soundManager.playClickSound()}
                         >
-                          <IconSymbol name="speaker.wave.2" color="#1565C0" size={16} />
-                          <Text style={styles.soundReplayText}>إعادة تشغيل الصوت</Text>
+                          <IconSymbol name="hand.tap" color="#FF9800" size={16} />
+                          <Text style={[styles.soundReplayText, { color: '#FF9800' }]}>تجربة صوت النقر</Text>
                         </Pressable>
-                      )}
+                      </View>
                     </View>
                   );
                 })}
@@ -259,7 +315,10 @@ export default function QuizScreen() {
                 </Button>
                 <Button
                   variant="outline"
-                  onPress={() => router.back()}
+                  onPress={async () => {
+                    await soundManager.playClickSound();
+                    setTimeout(() => router.back(), 200);
+                  }}
                   style={styles.actionButton}
                 >
                   العودة للرئيسية
@@ -309,11 +368,11 @@ export default function QuizScreen() {
             </Text>
           </View>
 
-          {/* Sound Feature Reminder */}
+          {/* Enhanced Sound Feature Reminder */}
           <View style={styles.soundReminder}>
             <IconSymbol name="speaker.wave.2" color="#4CAF50" size={20} />
             <Text style={styles.soundReminderText}>
-              ستسمع صوت طريقة النقل عند الإجابة الصحيحة
+              ستسمع: نقر → نجاح/خطأ → صوت طريقة النقل (للإجابات الصحيحة)
             </Text>
           </View>
 
@@ -370,21 +429,37 @@ export default function QuizScreen() {
                 <Text style={styles.explanationTitle}>التفسير:</Text>
                 <Text style={styles.explanationText}>{currentQ.explanation}</Text>
                 
-                {/* Sound control for correct answers */}
+                {/* Enhanced sound explanation for correct answers */}
                 {selectedAnswer === currentQ.correctAnswer && (
                   <View style={styles.soundExplanation}>
                     <IconSymbol name="speaker.wave.3" color="#4CAF50" size={20} />
                     <Text style={styles.soundExplanationText}>
-                      سمعت صوت {currentQ.soundType === 'diffusion' ? 'الانتشار' : 
+                      سمعت تسلسل الأصوات: نقر → نجاح → {currentQ.soundType === 'diffusion' ? 'الانتشار' : 
                                   currentQ.soundType === 'osmosis' ? 'الخاصية الاسموزية' : 
                                   'النقل النشط'}؟
                     </Text>
                     <Pressable
                       style={styles.replaySoundButton}
-                      onPress={() => soundManager.playTransportSound(currentQ.soundType)}
+                      onPress={async () => {
+                        await soundManager.playClickSound();
+                        setTimeout(async () => {
+                          await soundManager.playSuccessSound();
+                          setTimeout(() => soundManager.playTransportSound(currentQ.soundType), 400);
+                        }, 200);
+                      }}
                     >
-                      <Text style={styles.replaySoundText}>إعادة تشغيل</Text>
+                      <Text style={styles.replaySoundText}>إعادة تشغيل التسلسل</Text>
                     </Pressable>
+                  </View>
+                )}
+
+                {/* Sound explanation for incorrect answers */}
+                {selectedAnswer !== currentQ.correctAnswer && (
+                  <View style={styles.errorSoundExplanation}>
+                    <IconSymbol name="speaker.wave.1" color="#F44336" size={20} />
+                    <Text style={styles.errorSoundExplanationText}>
+                      سمعت: نقر → صوت خطأ. جرب مرة أخرى في الأسئلة القادمة!
+                    </Text>
                   </View>
                 )}
               </View>
@@ -560,6 +635,21 @@ const styles = StyleSheet.create({
     marginRight: 8,
     writingDirection: 'rtl',
   },
+  errorSoundExplanation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+    borderRadius: 8,
+  },
+  errorSoundExplanationText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#F44336',
+    marginLeft: 8,
+    writingDirection: 'rtl',
+  },
   replaySoundButton: {
     backgroundColor: '#4CAF50',
     paddingHorizontal: 12,
@@ -625,7 +715,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
-    marginBottom: 24,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(21, 101, 192, 0.3)',
   },
@@ -635,6 +725,35 @@ const styles = StyleSheet.create({
     color: '#1565C0',
     marginLeft: 12,
     fontWeight: '500',
+    writingDirection: 'rtl',
+  },
+  soundLegend: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    width: '100%',
+  },
+  soundLegendTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    marginBottom: 12,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
+  soundLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 8,
+  },
+  soundLegendText: {
+    fontSize: 14,
+    color: '#424242',
+    marginLeft: 12,
     writingDirection: 'rtl',
   },
   detailedResults: {
@@ -689,20 +808,23 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: 'right',
     writingDirection: 'rtl',
+    marginBottom: 8,
+  },
+  soundReplaySection: {
+    gap: 8,
   },
   soundReplayButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(21, 101, 192, 0.1)',
+    paddingVertical: 8,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
     borderRadius: 15,
     alignSelf: 'flex-end',
   },
   soundReplayText: {
     fontSize: 12,
-    color: '#1565C0',
+    color: '#4CAF50',
     marginLeft: 6,
     fontWeight: '500',
     writingDirection: 'rtl',

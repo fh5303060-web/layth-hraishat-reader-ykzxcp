@@ -62,16 +62,25 @@ export default function HomeScreen() {
 
   const handleTransportMethodPress = async (method: typeof transportMethods[0]) => {
     try {
+      // Play click sound first for immediate feedback
+      await soundManager.playClickSound();
+      
       // Play haptic feedback
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
-      // Play transport sound
-      await soundManager.playTransportSound(method.soundType);
-      
       // Toggle selection
+      const isOpening = selectedTransport !== method.id;
       setSelectedTransport(selectedTransport === method.id ? null : method.id);
       
-      console.log(`Selected transport method: ${method.title} with sound: ${method.soundType}`);
+      // Play transport sound when opening the dropdown
+      if (isOpening) {
+        // Small delay to let click sound finish
+        setTimeout(async () => {
+          await soundManager.playTransportSound(method.soundType);
+        }, 300);
+      }
+      
+      console.log(`${isOpening ? 'Opened' : 'Closed'} transport method: ${method.title} with sound: ${method.soundType}`);
     } catch (error) {
       console.log('Error handling transport method press:', error);
       // Still allow the UI interaction even if sound fails
@@ -79,64 +88,107 @@ export default function HomeScreen() {
     }
   };
 
-  const renderTransportMethod = (method: typeof transportMethods[0]) => (
-    <Pressable
-      key={method.id}
-      style={[styles.methodCard, { borderColor: method.color }]}
-      onPress={() => handleTransportMethodPress(method)}
-    >
-      <View style={styles.methodHeader}>
-        <View style={[styles.methodIcon, { backgroundColor: method.color }]}>
-          <IconSymbol name={method.icon as any} color="white" size={24} />
-        </View>
-        <View style={styles.methodInfo}>
-          <Text style={styles.methodTitle}>{method.title}</Text>
-          <Text style={styles.methodSubtitle}>{method.subtitle}</Text>
-          <View style={styles.soundIndicator}>
-            <IconSymbol name="speaker.wave.2" color={method.color} size={16} />
-            <Text style={[styles.soundText, { color: method.color }]}>اضغط للاستماع</Text>
+  const renderTransportMethod = (method: typeof transportMethods[0]) => {
+    const isExpanded = selectedTransport === method.id;
+    const soundInfo = soundManager.getSoundInfo(method.soundType);
+    
+    return (
+      <Pressable
+        key={method.id}
+        style={[styles.methodCard, { borderColor: method.color }]}
+        onPress={() => handleTransportMethodPress(method)}
+      >
+        <View style={styles.methodHeader}>
+          <View style={[styles.methodIcon, { backgroundColor: method.color }]}>
+            <IconSymbol name={method.icon as any} color="white" size={24} />
+          </View>
+          <View style={styles.methodInfo}>
+            <Text style={styles.methodTitle}>{method.title}</Text>
+            <Text style={styles.methodSubtitle}>{method.subtitle}</Text>
+            <View style={styles.soundIndicator}>
+              <IconSymbol name="speaker.wave.2" color={method.color} size={16} />
+              <Text style={[styles.soundText, { color: method.color }]}>
+                {isExpanded ? 'اضغط لإغلاق' : 'اضغط للاستماع'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.dropdownIndicator}>
+            <IconSymbol 
+              name={isExpanded ? "chevron.up" : "chevron.down"} 
+              color={colors.text} 
+              size={20} 
+            />
+            <Text style={styles.dropdownText}>
+              {isExpanded ? 'إغلاق' : 'فتح'}
+            </Text>
           </View>
         </View>
-        <IconSymbol 
-          name={selectedTransport === method.id ? "chevron.up" : "chevron.down"} 
-          color={colors.text} 
-          size={20} 
-        />
-      </View>
-      
-      {selectedTransport === method.id && (
-        <View style={styles.methodDetails}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>اتجاه الانتقال:</Text>
-            <Text style={styles.detailText}>{method.direction}</Text>
+        
+        {isExpanded && (
+          <View style={styles.methodDetails}>
+            {/* Sound Information Panel */}
+            <View style={[styles.soundInfoPanel, { borderColor: method.color }]}>
+              <View style={styles.soundInfoHeader}>
+                <IconSymbol name="waveform" color={method.color} size={20} />
+                <Text style={[styles.soundInfoTitle, { color: method.color }]}>معلومات الصوت</Text>
+              </View>
+              <View style={styles.soundInfoContent}>
+                <Text style={styles.soundInfoItem}>التردد: {soundInfo.frequency}</Text>
+                <Text style={styles.soundInfoItem}>الوصف: {soundInfo.description}</Text>
+                <Text style={styles.soundInfoItem}>النمط: {soundInfo.pattern}</Text>
+                <Text style={styles.soundInfoItem}>المدة: {soundInfo.duration}</Text>
+              </View>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>اتجاه الانتقال:</Text>
+              <Text style={styles.detailText}>{method.direction}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>المواد المنقولة:</Text>
+              <Text style={styles.detailText}>{method.materials}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>مثال:</Text>
+              <Text style={styles.detailText}>{method.description}</Text>
+            </View>
+            
+            {/* Enhanced Sound Controls */}
+            <View style={styles.soundControls}>
+              <Pressable
+                style={[styles.soundButton, { backgroundColor: method.color }]}
+                onPress={async () => {
+                  await soundManager.playClickSound();
+                  setTimeout(() => soundManager.playTransportSound(method.soundType), 200);
+                }}
+              >
+                <IconSymbol name="play.circle" color="white" size={20} />
+                <Text style={styles.soundButtonText}>تشغيل الصوت</Text>
+              </Pressable>
+              
+              <Pressable
+                style={[styles.soundButton, styles.stopButton]}
+                onPress={async () => {
+                  await soundManager.playClickSound();
+                  setTimeout(() => soundManager.stopAllSounds(), 100);
+                }}
+              >
+                <IconSymbol name="stop.circle" color="white" size={20} />
+                <Text style={styles.soundButtonText}>إيقاف</Text>
+              </Pressable>
+            </View>
           </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>المواد المنقولة:</Text>
-            <Text style={styles.detailText}>{method.materials}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>مثال:</Text>
-            <Text style={styles.detailText}>{method.description}</Text>
-          </View>
-          
-          {/* Sound Control */}
-          <View style={styles.soundControls}>
-            <Pressable
-              style={[styles.soundButton, { backgroundColor: method.color }]}
-              onPress={() => soundManager.playTransportSound(method.soundType)}
-            >
-              <IconSymbol name="play.circle" color="white" size={20} />
-              <Text style={styles.soundButtonText}>تشغيل الصوت</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
-    </Pressable>
-  );
+        )}
+      </Pressable>
+    );
+  };
 
   const renderHeaderRight = () => (
     <Pressable
-      onPress={() => router.push("/membrane-details")}
+      onPress={async () => {
+        await soundManager.playClickSound();
+        setTimeout(() => router.push("/membrane-details"), 200);
+      }}
       style={styles.headerButtonContainer}
     >
       <IconSymbol name="info.circle" color={ICON_COLOR} />
@@ -145,7 +197,10 @@ export default function HomeScreen() {
 
   const renderHeaderLeft = () => (
     <Pressable
-      onPress={() => router.push("/quiz")}
+      onPress={async () => {
+        await soundManager.playClickSound();
+        setTimeout(() => router.push("/quiz"), 200);
+      }}
       style={styles.headerButtonContainer}
     >
       <IconSymbol name="questionmark.circle" color={ICON_COLOR} />
@@ -188,17 +243,29 @@ export default function HomeScreen() {
               استكشف عالم آليات النقل عبر الأغشية الخلوية الرائع
             </Text>
             
-            {/* Sound Feature Indicator */}
+            {/* Enhanced Sound Feature Indicator */}
             <View style={styles.soundFeatureIndicator}>
               <IconSymbol name="speaker.wave.3" color="#1565C0" size={20} />
-              <Text style={styles.soundFeatureText}>تطبيق تفاعلي مع الأصوات التعليمية</Text>
+              <Text style={styles.soundFeatureText}>تطبيق تفاعلي مع أصوات تعليمية مميزة</Text>
+              <View style={styles.soundBadge}>
+                <Text style={styles.soundBadgeText}>جديد!</Text>
+              </View>
             </View>
           </View>
 
           {/* Transport Methods */}
           <View style={styles.methodsSection}>
             <Text style={styles.sectionTitle}>طرق النقل</Text>
-            <Text style={styles.sectionSubtitle}>اضغط على كل طريقة لسماع صوتها المميز</Text>
+            <Text style={styles.sectionSubtitle}>اضغط على كل طريقة لسماع صوتها المميز والتعرف على تفاصيلها</Text>
+            
+            {/* Sound Instructions */}
+            <View style={styles.soundInstructions}>
+              <IconSymbol name="hand.tap" color="#FF9800" size={18} />
+              <Text style={styles.instructionText}>
+                كل ضغطة تشغل صوت نقر متبوعاً بصوت طريقة النقل المختارة
+              </Text>
+            </View>
+            
             {transportMethods.map(renderTransportMethod)}
           </View>
 
@@ -206,14 +273,20 @@ export default function HomeScreen() {
           <View style={styles.actionsSection}>
             <Button
               variant="primary"
-              onPress={() => router.push("/interactive-demo")}
+              onPress={async () => {
+                await soundManager.playClickSound();
+                setTimeout(() => router.push("/interactive-demo"), 200);
+              }}
               style={styles.actionButton}
             >
               العرض التفاعلي
             </Button>
             <Button
               variant="outline"
-              onPress={() => router.push("/membrane-details")}
+              onPress={async () => {
+                await soundManager.playClickSound();
+                setTimeout(() => router.push("/membrane-details"), 200);
+              }}
               style={styles.actionButton}
             >
               تفاصيل الغشاء
@@ -298,12 +371,28 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(21, 101, 192, 0.3)',
   },
   soundFeatureText: {
     fontSize: 14,
     color: '#1565C0',
     marginLeft: 8,
     fontWeight: '500',
+    writingDirection: 'rtl',
+    flex: 1,
+  },
+  soundBadge: {
+    backgroundColor: '#FF4444',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 8,
+  },
+  soundBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
     writingDirection: 'rtl',
   },
   methodsSection: {
@@ -320,10 +409,29 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: 'center',
     writingDirection: 'rtl',
     fontStyle: 'italic',
+  },
+  soundInstructions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 152, 0, 0.3)',
+  },
+  instructionText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#FF9800',
+    marginLeft: 8,
+    fontWeight: '500',
+    writingDirection: 'rtl',
   },
   methodCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -376,11 +484,49 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     writingDirection: 'rtl',
   },
+  dropdownIndicator: {
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  dropdownText: {
+    fontSize: 10,
+    color: '#666',
+    marginTop: 2,
+    writingDirection: 'rtl',
+  },
   methodDetails: {
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
+  },
+  soundInfoPanel: {
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  soundInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    justifyContent: 'flex-end',
+  },
+  soundInfoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+    writingDirection: 'rtl',
+  },
+  soundInfoContent: {
+    gap: 6,
+  },
+  soundInfoItem: {
+    fontSize: 14,
+    color: '#424242',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   detailRow: {
     marginBottom: 12,
@@ -402,7 +548,9 @@ const styles = StyleSheet.create({
   },
   soundControls: {
     marginTop: 16,
-    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
   },
   soundButton: {
     flexDirection: 'row',
@@ -412,10 +560,15 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.2)',
     elevation: 4,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  stopButton: {
+    backgroundColor: '#666',
   },
   soundButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     marginLeft: 8,
     writingDirection: 'rtl',

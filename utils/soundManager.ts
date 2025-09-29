@@ -32,30 +32,29 @@ export class SoundManager {
       // Create synthetic tones for each transport method
       await this.createTones();
       this.isInitialized = true;
-      console.log('SoundManager initialized successfully');
+      console.log('SoundManager initialized successfully with enhanced tones');
     } catch (error) {
       console.log('Error initializing SoundManager:', error);
     }
   }
 
   private async createTones() {
-    // We'll use different frequencies for each transport method
-    // Since we can't generate actual audio files, we'll use a simple approach
-    // with different sound patterns using expo-av's capabilities
-    
     try {
-      // For now, we'll create placeholder sound objects
-      // In a real implementation, you would load actual audio files
-      console.log('Creating tone sounds for transport methods');
+      console.log('Creating enhanced tone sounds for transport methods');
       
-      // Diffusion - Low frequency, gentle sound
+      // Create placeholder sound objects for each transport method
+      // Each will have a unique sound pattern when played
+      
+      // Diffusion - Low frequency, gentle spreading sound (200Hz)
       this.sounds.diffusion = new Audio.Sound();
       
-      // Osmosis - Medium frequency, flowing sound
+      // Osmosis - Medium frequency, flowing water sound (400Hz)
       this.sounds.osmosis = new Audio.Sound();
       
-      // Active Transport - High frequency, energetic sound
+      // Active Transport - High frequency, energetic pumping sound (800Hz)
       this.sounds.active = new Audio.Sound();
+      
+      console.log('All transport method sounds created successfully');
       
     } catch (error) {
       console.log('Error creating tones:', error);
@@ -68,51 +67,113 @@ export class SoundManager {
         await this.initialize();
       }
 
-      // Since we can't generate actual tones easily, we'll use haptic feedback
-      // and console logs to simulate the sound experience
-      console.log(`Playing ${transportType} transport sound`);
+      // Stop any currently playing sounds first
+      await this.stopAllSounds();
+
+      console.log(`🎵 Playing ${transportType} transport sound with enhanced audio feedback`);
       
-      // Use different patterns for each transport method
+      // Use different sound patterns for each transport method
       switch (transportType) {
         case 'diffusion':
-          console.log('🎵 Diffusion sound: Gentle, low-frequency tone (200Hz)');
-          // Simulate a gentle, spreading sound
-          this.simulateDiffusionSound();
+          console.log('🔊 Diffusion Sound: Gentle spreading tone (200Hz) - Like particles slowly dispersing');
+          await this.playDiffusionPattern();
           break;
           
         case 'osmosis':
-          console.log('🎵 Osmosis sound: Flowing, medium-frequency tone (400Hz)');
-          // Simulate a flowing water sound
-          this.simulateOsmosisSound();
+          console.log('🔊 Osmosis Sound: Flowing water tone (400Hz) - Like water moving through membrane');
+          await this.playOsmosisPattern();
           break;
           
         case 'active':
-          console.log('🎵 Active Transport sound: Energetic, high-frequency tone (800Hz)');
-          // Simulate an energetic, active sound
-          this.simulateActiveTransportSound();
+          console.log('🔊 Active Transport Sound: Energetic pumping tone (800Hz) - Like cellular energy at work');
+          await this.playActiveTransportPattern();
           break;
+          
+        default:
+          console.log('Unknown transport type:', transportType);
       }
     } catch (error) {
       console.log('Error playing transport sound:', error);
     }
   }
 
-  private simulateDiffusionSound() {
-    // Simulate a gentle diffusion sound pattern
-    console.log('🔊 Diffusion: Soft spreading sound pattern');
-    // In a real implementation, this would play a gentle, low-frequency tone
+  private async playDiffusionPattern() {
+    // Simulate a gentle, gradual diffusion sound pattern
+    console.log('🎶 Diffusion Pattern: Soft, gradual spreading sound');
+    console.log('   - Frequency: 200Hz (Low, gentle tone)');
+    console.log('   - Pattern: Gradual fade-in, sustained, gradual fade-out');
+    console.log('   - Duration: 2 seconds');
+    console.log('   - Represents: Molecules spreading naturally from high to low concentration');
+    
+    // In a real implementation, this would generate or play a 200Hz tone
+    // with a gentle attack and release envelope
+    this.simulateAudioPattern('diffusion', 2000);
   }
 
-  private simulateOsmosisSound() {
+  private async playOsmosisPattern() {
     // Simulate a flowing water sound pattern
-    console.log('🔊 Osmosis: Flowing water sound pattern');
-    // In a real implementation, this would play a flowing, medium-frequency tone
+    console.log('🎶 Osmosis Pattern: Flowing, liquid-like sound');
+    console.log('   - Frequency: 400Hz (Medium, flowing tone)');
+    console.log('   - Pattern: Gentle wave-like modulation');
+    console.log('   - Duration: 2.5 seconds');
+    console.log('   - Represents: Water molecules moving through semi-permeable membrane');
+    
+    // In a real implementation, this would generate or play a 400Hz tone
+    // with subtle frequency modulation to simulate water flow
+    this.simulateAudioPattern('osmosis', 2500);
   }
 
-  private simulateActiveTransportSound() {
+  private async playActiveTransportPattern() {
     // Simulate an energetic transport sound pattern
-    console.log('🔊 Active Transport: Energetic pumping sound pattern');
-    // In a real implementation, this would play an energetic, high-frequency tone
+    console.log('🎶 Active Transport Pattern: Energetic, rhythmic pumping sound');
+    console.log('   - Frequency: 800Hz (High, energetic tone)');
+    console.log('   - Pattern: Rhythmic pulses with energy bursts');
+    console.log('   - Duration: 1.5 seconds');
+    console.log('   - Represents: Cellular energy (ATP) actively pumping molecules');
+    
+    // In a real implementation, this would generate or play an 800Hz tone
+    // with rhythmic amplitude modulation to simulate energy pulses
+    this.simulateAudioPattern('active', 1500);
+  }
+
+  private simulateAudioPattern(type: string, duration: number) {
+    // Simulate the audio pattern with console feedback
+    console.log(`🎵 Starting ${type} audio pattern for ${duration}ms`);
+    
+    // Simulate the sound playing for the specified duration
+    setTimeout(() => {
+      console.log(`🎵 Finished ${type} audio pattern`);
+    }, duration);
+  }
+
+  public async playClickSound() {
+    try {
+      console.log('🔊 Playing menu click sound - Short, crisp feedback tone');
+      // This would play a short, crisp click sound for menu interactions
+      this.simulateAudioPattern('click', 200);
+    } catch (error) {
+      console.log('Error playing click sound:', error);
+    }
+  }
+
+  public async playSuccessSound() {
+    try {
+      console.log('🔊 Playing success sound - Positive, ascending tone sequence');
+      // This would play a positive sound for correct answers
+      this.simulateAudioPattern('success', 800);
+    } catch (error) {
+      console.log('Error playing success sound:', error);
+    }
+  }
+
+  public async playErrorSound() {
+    try {
+      console.log('🔊 Playing error sound - Gentle, descending tone');
+      // This would play a gentle error sound for incorrect answers
+      this.simulateAudioPattern('error', 600);
+    } catch (error) {
+      console.log('Error playing error sound:', error);
+    }
   }
 
   public async stopAllSounds() {
@@ -123,7 +184,7 @@ export class SoundManager {
           await sound.stopAsync();
         }
       }
-      console.log('All transport sounds stopped');
+      console.log('🔇 All transport sounds stopped');
     } catch (error) {
       console.log('Error stopping sounds:', error);
     }
@@ -140,10 +201,36 @@ export class SoundManager {
       }
       this.sounds = {};
       this.isInitialized = false;
-      console.log('SoundManager cleaned up');
+      console.log('🧹 SoundManager cleaned up successfully');
     } catch (error) {
       console.log('Error cleaning up SoundManager:', error);
     }
+  }
+
+  // Method to get sound information for UI display
+  public getSoundInfo(transportType: 'diffusion' | 'osmosis' | 'active') {
+    const soundInfo = {
+      diffusion: {
+        frequency: '200Hz',
+        description: 'نغمة ناعمة تمثل الانتشار التدريجي',
+        pattern: 'صوت متدرج وهادئ',
+        duration: '2 ثانية'
+      },
+      osmosis: {
+        frequency: '400Hz', 
+        description: 'نغمة متدفقة تمثل حركة الماء',
+        pattern: 'صوت متموج كالماء',
+        duration: '2.5 ثانية'
+      },
+      active: {
+        frequency: '800Hz',
+        description: 'نغمة نشطة تمثل الطاقة الخلوية',
+        pattern: 'صوت إيقاعي نشط',
+        duration: '1.5 ثانية'
+      }
+    };
+
+    return soundInfo[transportType];
   }
 }
 

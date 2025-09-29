@@ -87,17 +87,26 @@ export default function InteractiveDemoScreen() {
 
   const handleDemoPress = async (demo: typeof demos[0]) => {
     try {
+      // Play click sound first for immediate feedback
+      await soundManager.playClickSound();
+      
       // Play haptic feedback
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
-      // Play transport sound
-      await soundManager.playTransportSound(demo.soundType);
-      
       // Toggle selection and start animation
+      const isOpening = selectedDemo !== demo.id;
       setSelectedDemo(selectedDemo === demo.id ? null : demo.id);
       startAnimation();
       
-      console.log(`Selected demo: ${demo.title} with sound: ${demo.soundType}`);
+      // Play transport sound when opening the dropdown
+      if (isOpening) {
+        // Small delay to let click sound finish
+        setTimeout(async () => {
+          await soundManager.playTransportSound(demo.soundType);
+        }, 300);
+      }
+      
+      console.log(`${isOpening ? 'Opened' : 'Closed'} demo: ${demo.title} with sound: ${demo.soundType}`);
     } catch (error) {
       console.log('Error handling demo press:', error);
       // Still allow the UI interaction even if sound fails
@@ -106,100 +115,144 @@ export default function InteractiveDemoScreen() {
     }
   };
 
-  const renderDemo = (demo: typeof demos[0]) => (
-    <View key={demo.id} style={[styles.demoCard, { borderColor: demo.color }]}>
-      <Pressable
-        onPress={() => handleDemoPress(demo)}
-        style={styles.demoHeader}
-      >
-        <View style={[styles.demoIcon, { backgroundColor: demo.color }]}>
-          <IconSymbol name={demo.icon as any} color="white" size={28} />
-        </View>
-        <View style={styles.demoInfo}>
-          <Text style={styles.demoTitle}>{demo.title}</Text>
-          <Text style={styles.demoDescription}>{demo.description}</Text>
-          <Text style={styles.demoExample}>{demo.example}</Text>
-          
-          {/* Sound indicator */}
-          <View style={styles.soundIndicator}>
-            <IconSymbol name="speaker.wave.2" color={demo.color} size={16} />
-            <Text style={[styles.soundText, { color: demo.color }]}>مع الصوت التفاعلي</Text>
-          </View>
-        </View>
-        <IconSymbol 
-          name={selectedDemo === demo.id ? "chevron.up" : "chevron.down"} 
-          color="#1565C0" 
-          size={24} 
-        />
-      </Pressable>
-
-      {selectedDemo === demo.id && (
-        <Animated.View 
-          style={[
-            styles.demoSteps,
-            {
-              opacity: animationValue,
-              transform: [{
-                translateY: animationValue.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-20, 0],
-                }),
-              }],
-            }
-          ]}
+  const renderDemo = (demo: typeof demos[0]) => {
+    const isExpanded = selectedDemo === demo.id;
+    const soundInfo = soundManager.getSoundInfo(demo.soundType);
+    
+    return (
+      <View key={demo.id} style={[styles.demoCard, { borderColor: demo.color }]}>
+        <Pressable
+          onPress={() => handleDemoPress(demo)}
+          style={styles.demoHeader}
         >
-          <Text style={styles.stepsTitle}>خطوات التجربة:</Text>
-          {demo.steps.map((step, index) => (
-            <View key={index} style={styles.stepItem}>
-              <View style={[styles.stepNumber, { backgroundColor: demo.color }]}>
-                <Text style={styles.stepNumberText}>{index + 1}</Text>
-              </View>
-              <Text style={styles.stepText}>{step}</Text>
+          <View style={[styles.demoIcon, { backgroundColor: demo.color }]}>
+            <IconSymbol name={demo.icon as any} color="white" size={28} />
+          </View>
+          <View style={styles.demoInfo}>
+            <Text style={styles.demoTitle}>{demo.title}</Text>
+            <Text style={styles.demoDescription}>{demo.description}</Text>
+            <Text style={styles.demoExample}>{demo.example}</Text>
+            
+            {/* Sound indicator */}
+            <View style={styles.soundIndicator}>
+              <IconSymbol name="speaker.wave.2" color={demo.color} size={16} />
+              <Text style={[styles.soundText, { color: demo.color }]}>
+                {isExpanded ? 'مع الصوت النشط' : 'مع الصوت التفاعلي'}
+              </Text>
             </View>
-          ))}
-          
-          <View style={styles.animationContainer}>
-            <Animated.View 
-              style={[
-                styles.animatedParticle,
-                { backgroundColor: demo.color },
-                {
-                  transform: [{
-                    translateX: animationValue.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 100],
-                    }),
-                  }],
-                }
-              ]}
+          </View>
+          <View style={styles.dropdownIndicator}>
+            <IconSymbol 
+              name={isExpanded ? "chevron.up" : "chevron.down"} 
+              color="#1565C0" 
+              size={24} 
             />
-            <Text style={styles.animationLabel}>محاكاة الحركة</Text>
+            <Text style={styles.dropdownText}>
+              {isExpanded ? 'إغلاق' : 'فتح'}
+            </Text>
           </View>
+        </Pressable>
 
-          {/* Sound Control Panel */}
-          <View style={styles.soundControlPanel}>
-            <Text style={styles.soundControlTitle}>التحكم في الصوت</Text>
-            <View style={styles.soundButtons}>
-              <Pressable
-                style={[styles.soundControlButton, { backgroundColor: demo.color }]}
-                onPress={() => soundManager.playTransportSound(demo.soundType)}
-              >
-                <IconSymbol name="play.circle" color="white" size={20} />
-                <Text style={styles.soundControlButtonText}>تشغيل</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.soundControlButton, { backgroundColor: '#666' }]}
-                onPress={() => soundManager.stopAllSounds()}
-              >
-                <IconSymbol name="stop.circle" color="white" size={20} />
-                <Text style={styles.soundControlButtonText}>إيقاف</Text>
-              </Pressable>
+        {isExpanded && (
+          <Animated.View 
+            style={[
+              styles.demoSteps,
+              {
+                opacity: animationValue,
+                transform: [{
+                  translateY: animationValue.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, 0],
+                  }),
+                }],
+              }
+            ]}
+          >
+            {/* Sound Information Panel */}
+            <View style={[styles.soundInfoPanel, { borderColor: demo.color }]}>
+              <View style={styles.soundInfoHeader}>
+                <IconSymbol name="waveform" color={demo.color} size={20} />
+                <Text style={[styles.soundInfoTitle, { color: demo.color }]}>خصائص الصوت</Text>
+              </View>
+              <View style={styles.soundInfoGrid}>
+                <Text style={styles.soundInfoItem}>التردد: {soundInfo.frequency}</Text>
+                <Text style={styles.soundInfoItem}>المدة: {soundInfo.duration}</Text>
+                <Text style={styles.soundInfoItem}>النمط: {soundInfo.pattern}</Text>
+                <Text style={styles.soundInfoItem}>الوصف: {soundInfo.description}</Text>
+              </View>
             </View>
-          </View>
-        </Animated.View>
-      )}
-    </View>
-  );
+
+            <Text style={styles.stepsTitle}>خطوات التجربة:</Text>
+            {demo.steps.map((step, index) => (
+              <View key={index} style={styles.stepItem}>
+                <View style={[styles.stepNumber, { backgroundColor: demo.color }]}>
+                  <Text style={styles.stepNumberText}>{index + 1}</Text>
+                </View>
+                <Text style={styles.stepText}>{step}</Text>
+              </View>
+            ))}
+            
+            <View style={styles.animationContainer}>
+              <Animated.View 
+                style={[
+                  styles.animatedParticle,
+                  { backgroundColor: demo.color },
+                  {
+                    transform: [{
+                      translateX: animationValue.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 100],
+                      }),
+                    }],
+                  }
+                ]}
+              />
+              <Text style={styles.animationLabel}>محاكاة الحركة</Text>
+            </View>
+
+            {/* Enhanced Sound Control Panel */}
+            <View style={styles.soundControlPanel}>
+              <Text style={styles.soundControlTitle}>التحكم في الأصوات</Text>
+              <View style={styles.soundButtons}>
+                <Pressable
+                  style={[styles.soundControlButton, { backgroundColor: demo.color }]}
+                  onPress={async () => {
+                    await soundManager.playClickSound();
+                    setTimeout(() => soundManager.playTransportSound(demo.soundType), 200);
+                  }}
+                >
+                  <IconSymbol name="play.circle" color="white" size={20} />
+                  <Text style={styles.soundControlButtonText}>تشغيل</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.soundControlButton, { backgroundColor: '#666' }]}
+                  onPress={async () => {
+                    await soundManager.playClickSound();
+                    setTimeout(() => soundManager.stopAllSounds(), 100);
+                  }}
+                >
+                  <IconSymbol name="stop.circle" color="white" size={20} />
+                  <Text style={styles.soundControlButtonText}>إيقاف</Text>
+                </Pressable>
+              </View>
+              
+              {/* Click Sound Demo */}
+              <View style={styles.clickSoundDemo}>
+                <Text style={styles.clickSoundTitle}>تجربة صوت النقر:</Text>
+                <Pressable
+                  style={styles.clickDemoButton}
+                  onPress={() => soundManager.playClickSound()}
+                >
+                  <IconSymbol name="hand.tap" color="#FF9800" size={18} />
+                  <Text style={styles.clickDemoText}>اضغط لسماع صوت النقر</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <>
@@ -227,10 +280,10 @@ export default function InteractiveDemoScreen() {
               اكتشف طرق النقل عبر الغشاء البيلازمي من خلال التجارب العملية
             </Text>
             
-            {/* Sound Feature Highlight */}
+            {/* Enhanced Sound Feature Highlight */}
             <View style={styles.soundFeatureHighlight}>
               <IconSymbol name="speaker.wave.3" color="#1565C0" size={24} />
-              <Text style={styles.soundFeatureText}>تجارب تفاعلية مع أصوات تعليمية مميزة</Text>
+              <Text style={styles.soundFeatureText}>تجارب تفاعلية مع أصوات نقر وأصوات تعليمية مميزة</Text>
             </View>
           </View>
 
@@ -239,7 +292,7 @@ export default function InteractiveDemoScreen() {
             {demos.map(renderDemo)}
           </View>
 
-          {/* Tips Section */}
+          {/* Enhanced Tips Section */}
           <View style={styles.tipsSection}>
             <Text style={styles.sectionTitle}>نصائح مهمة</Text>
             <View style={styles.tipCard}>
@@ -257,7 +310,13 @@ export default function InteractiveDemoScreen() {
             <View style={styles.tipCard}>
               <IconSymbol name="speaker.wave.2" color="#4CAF50" size={24} />
               <Text style={styles.tipText}>
-                استمع للأصوات المختلفة لكل طريقة نقل لتمييزها بسهولة
+                استمع للأصوات المختلفة: صوت النقر عند الضغط وصوت طريقة النقل عند الفتح
+              </Text>
+            </View>
+            <View style={styles.tipCard}>
+              <IconSymbol name="hand.tap" color="#FF9800" size={24} />
+              <Text style={styles.tipText}>
+                كل ضغطة تبدأ بصوت نقر سريع متبوعاً بالصوت التعليمي المناسب
               </Text>
             </View>
           </View>
@@ -266,14 +325,20 @@ export default function InteractiveDemoScreen() {
           <View style={styles.actionsSection}>
             <Button
               variant="primary"
-              onPress={() => router.push("/quiz")}
+              onPress={async () => {
+                await soundManager.playClickSound();
+                setTimeout(() => router.push("/quiz"), 200);
+              }}
               style={styles.actionButton}
             >
               اختبر معلوماتك
             </Button>
             <Button
               variant="outline"
-              onPress={() => router.back()}
+              onPress={async () => {
+                await soundManager.playClickSound();
+                setTimeout(() => router.back(), 200);
+              }}
               style={styles.actionButton}
             >
               العودة للرئيسية
@@ -335,6 +400,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontWeight: '600',
     writingDirection: 'rtl',
+    flex: 1,
   },
   demosSection: {
     marginBottom: 24,
@@ -398,11 +464,49 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     writingDirection: 'rtl',
   },
+  dropdownIndicator: {
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  dropdownText: {
+    fontSize: 10,
+    color: '#666',
+    marginTop: 2,
+    writingDirection: 'rtl',
+  },
   demoSteps: {
     padding: 20,
     paddingTop: 0,
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
+  },
+  soundInfoPanel: {
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  soundInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    justifyContent: 'flex-end',
+  },
+  soundInfoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+    writingDirection: 'rtl',
+  },
+  soundInfoGrid: {
+    gap: 6,
+  },
+  soundInfoItem: {
+    fontSize: 14,
+    color: '#424242',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   stepsTitle: {
     fontSize: 18,
@@ -476,6 +580,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 12,
+    marginBottom: 16,
   },
   soundControlButton: {
     flexDirection: 'row',
@@ -485,12 +590,42 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.2)',
     elevation: 3,
+    flex: 1,
+    justifyContent: 'center',
   },
   soundControlButtonText: {
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',
     marginLeft: 6,
+    writingDirection: 'rtl',
+  },
+  clickSoundDemo: {
+    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 152, 0, 0.3)',
+  },
+  clickSoundTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FF9800',
+    textAlign: 'center',
+    marginBottom: 8,
+    writingDirection: 'rtl',
+  },
+  clickDemoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  clickDemoText: {
+    fontSize: 13,
+    color: '#FF9800',
+    marginLeft: 6,
+    fontWeight: '500',
     writingDirection: 'rtl',
   },
   tipsSection: {
