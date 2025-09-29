@@ -1,87 +1,98 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Stack, router } from "expo-router";
-import { FlatList, Pressable, StyleSheet, View, Text } from "react-native";
-// Components
-import { IconCircle } from "@/components/IconCircle";
+import { ScrollView, StyleSheet, View, Text, Pressable, ImageBackground } from "react-native";
 import { IconSymbol } from "@/components/IconSymbol";
-import { BodyScrollView } from "@/components/BodyScrollView";
 import { Button } from "@/components/button";
-// Constants & Hooks
-import { backgroundColors } from "@/constants/Colors";
+import { commonStyles, colors } from "@/styles/commonStyles";
 
 const ICON_COLOR = "#007AFF";
 
 export default function HomeScreen() {
+  const [selectedTransport, setSelectedTransport] = useState<string | null>(null);
 
-  const modalDemos = [
+  const transportMethods = [
     {
-      title: "Standard Modal",
-      description: "Full screen modal presentation",
-      route: "/modal",
-      color: "#007AFF",
+      id: "passive",
+      title: "Passive Transport",
+      subtitle: "No Energy Required",
+      description: "Movement of substances across the membrane without energy input",
+      methods: ["Simple Diffusion", "Facilitated Diffusion", "Osmosis"],
+      color: "#4CAF50",
+      icon: "arrow.right.circle"
     },
     {
-      title: "Form Sheet",
-      description: "Bottom sheet with detents and grabber",
-      route: "/formsheet",
-      color: "#34C759",
+      id: "active",
+      title: "Active Transport",
+      subtitle: "Energy Required",
+      description: "Movement against concentration gradient using ATP",
+      methods: ["Primary Active Transport", "Secondary Active Transport"],
+      color: "#FF9800",
+      icon: "bolt.circle"
     },
     {
-      title: "Transparent Modal",
-      description: "Overlay without obscuring background",
-      route: "/transparent-modal",
-      color: "#FF9500",
+      id: "bulk",
+      title: "Bulk Transport",
+      subtitle: "Large Molecules",
+      description: "Transport of large molecules via vesicles",
+      methods: ["Endocytosis", "Exocytosis", "Phagocytosis", "Pinocytosis"],
+      color: "#9C27B0",
+      icon: "circle.grid.3x3"
     }
   ];
 
-  const renderModalDemo = ({ item }: { item: typeof modalDemos[0] }) => (
-    <View style={styles.demoCard}>
-      <View style={[styles.demoIcon, { backgroundColor: item.color }]}>
-        <IconSymbol name="square.grid.3x3" color="white" size={24} />
+  const renderTransportMethod = (method: typeof transportMethods[0]) => (
+    <Pressable
+      key={method.id}
+      style={[styles.methodCard, { borderColor: method.color }]}
+      onPress={() => setSelectedTransport(selectedTransport === method.id ? null : method.id)}
+    >
+      <View style={styles.methodHeader}>
+        <View style={[styles.methodIcon, { backgroundColor: method.color }]}>
+          <IconSymbol name={method.icon as any} color="white" size={24} />
+        </View>
+        <View style={styles.methodInfo}>
+          <Text style={styles.methodTitle}>{method.title}</Text>
+          <Text style={styles.methodSubtitle}>{method.subtitle}</Text>
+        </View>
+        <IconSymbol 
+          name={selectedTransport === method.id ? "chevron.up" : "chevron.down"} 
+          color={colors.text} 
+          size={20} 
+        />
       </View>
-      <View style={styles.demoContent}>
-        <Text style={styles.demoTitle}>{item.title}</Text>
-        <Text style={styles.demoDescription}>{item.description}</Text>
-      </View>
-      <Button
-        variant="outline"
-        size="sm"
-        onPress={() => router.push(item.route as any)}
-      >
-        Try It
-      </Button>
-    </View>
-  );
-
-  const renderEmptyList = () => (
-    <BodyScrollView contentContainerStyle={styles.emptyStateContainer}>
-      <IconCircle
-        emoji=""
-        backgroundColor={
-          backgroundColors[Math.floor(Math.random() * backgroundColors.length)]
-        }
-      />
-    </BodyScrollView>
+      
+      {selectedTransport === method.id && (
+        <View style={styles.methodDetails}>
+          <Text style={styles.methodDescription}>{method.description}</Text>
+          <View style={styles.methodsList}>
+            {method.methods.map((subMethod, index) => (
+              <View key={index} style={styles.subMethodItem}>
+                <View style={[styles.subMethodDot, { backgroundColor: method.color }]} />
+                <Text style={styles.subMethodText}>{subMethod}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+    </Pressable>
   );
 
   const renderHeaderRight = () => (
     <Pressable
-      onPress={() => {console.log("plus")}}
+      onPress={() => router.push("/membrane-details")}
       style={styles.headerButtonContainer}
     >
-      <IconSymbol name="plus" color={ICON_COLOR} />
+      <IconSymbol name="info.circle" color={ICON_COLOR} />
     </Pressable>
   );
 
   const renderHeaderLeft = () => (
     <Pressable
-      onPress={() => {console.log("gear")}}
+      onPress={() => router.push("/quiz")}
       style={styles.headerButtonContainer}
     >
-      <IconSymbol
-        name="gear"
-        color={ICON_COLOR}
-      />
+      <IconSymbol name="questionmark.circle" color={ICON_COLOR} />
     </Pressable>
   );
 
@@ -89,20 +100,77 @@ export default function HomeScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "Building the app...",
+          title: "LAYTH HRAISHAT",
           headerRight: renderHeaderRight,
           headerLeft: renderHeaderLeft,
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerTintColor: colors.text,
         }}
       />
+      
       <View style={styles.container}>
-        <FlatList
-          data={modalDemos}
-          renderItem={renderModalDemo}
-          keyExtractor={(item) => item.route}
-          contentContainerStyle={styles.listContainer}
-          contentInsetAdjustmentBehavior="automatic"
+        {/* Background with transparent overlay */}
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=600&fit=crop' }}
+          style={styles.backgroundImage}
+          imageStyle={styles.backgroundImageStyle}
+        >
+          <View style={styles.overlay} />
+        </ImageBackground>
+
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-        />
+        >
+          {/* Header Section */}
+          <View style={styles.headerSection}>
+            <Text style={styles.appTitle}>LAYTH HRAISHAT</Text>
+            <Text style={styles.appSubtitle}>Bilazmii - Membrane Transport Methods</Text>
+            <Text style={styles.headerDescription}>
+              Explore the fascinating world of cellular membrane transport mechanisms
+            </Text>
+          </View>
+
+          {/* Transport Methods */}
+          <View style={styles.methodsSection}>
+            <Text style={styles.sectionTitle}>Transport Methods</Text>
+            {transportMethods.map(renderTransportMethod)}
+          </View>
+
+          {/* Quick Actions */}
+          <View style={styles.actionsSection}>
+            <Button
+              variant="primary"
+              onPress={() => router.push("/interactive-demo")}
+              style={styles.actionButton}
+            >
+              Interactive Demo
+            </Button>
+            <Button
+              variant="outline"
+              onPress={() => router.push("/study-guide")}
+              style={styles.actionButton}
+            >
+              Study Guide
+            </Button>
+          </View>
+        </ScrollView>
+
+        {/* Bottom Image Representation */}
+        <View style={styles.bottomImageContainer}>
+          <ImageBackground
+            source={{ uri: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?w=400&h=200&fit=crop' }}
+            style={styles.bottomImage}
+            imageStyle={styles.bottomImageStyle}
+          >
+            <View style={styles.bottomImageOverlay}>
+              <Text style={styles.bottomImageText}>Cell Membrane Structure</Text>
+            </View>
+          </ImageBackground>
+        </View>
       </View>
     </>
   );
@@ -111,44 +179,80 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
+  },
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  backgroundImageStyle: {
+    opacity: 0.1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.background,
+    opacity: 0.8,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 120, // Space for bottom image
   },
   headerSection: {
     padding: 20,
-    paddingBottom: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    alignItems: 'center',
+    marginTop: 20,
   },
-  headerTitle: {
+  appTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 2,
+  },
+  appSubtitle: {
+    fontSize: 18,
+    color: colors.accent,
+    textAlign: 'center',
+    marginBottom: 12,
+    fontWeight: '600',
+  },
+  headerDescription: {
+    fontSize: 16,
+    color: colors.grey,
+    textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: 20,
+  },
+  methodsSection: {
+    padding: 20,
+  },
+  sectionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    color: colors.text,
+    marginBottom: 20,
+    textAlign: 'center',
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    lineHeight: 22,
+  methodCard: {
+    backgroundColor: colors.backgroundAlt,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 2,
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 4,
   },
-  listContainer: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-  },
-  demoCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+  methodHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
-  demoIcon: {
+  methodIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -156,26 +260,88 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
-  demoContent: {
+  methodInfo: {
     flex: 1,
   },
-  demoTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+  methodTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
     marginBottom: 4,
   },
-  demoDescription: {
+  methodSubtitle: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 18,
+    color: colors.grey,
+    fontWeight: '500',
   },
-  emptyStateContainer: {
-    alignItems: "center",
-    gap: 8,
-    paddingTop: 100,
+  methodDetails: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.grey + '30',
+  },
+  methodDescription: {
+    fontSize: 16,
+    color: colors.text,
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  methodsList: {
+    gap: 12,
+  },
+  subMethodItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subMethodDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  subMethodText: {
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  actionsSection: {
+    padding: 20,
+    gap: 12,
+  },
+  actionButton: {
+    width: '100%',
+  },
+  bottomImageContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+  },
+  bottomImage: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bottomImageStyle: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  bottomImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  bottomImageText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   headerButtonContainer: {
-    padding: 6, // Just enough padding around the 24px icon
+    padding: 8,
   },
 });
