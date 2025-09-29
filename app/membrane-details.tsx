@@ -1,56 +1,59 @@
 
 import React from "react";
-import { Stack, router } from "expo-router";
-import { ScrollView, StyleSheet, View, Text, Pressable } from "react-native";
 import { IconSymbol } from "@/components/IconSymbol";
+import { Stack, router } from "expo-router";
 import { Button } from "@/components/button";
 import { commonStyles, colors } from "@/styles/commonStyles";
+import { ScrollView, StyleSheet, View, Text, Pressable, Image } from "react-native";
 
 export default function MembraneDetailsScreen() {
   const membraneComponents = [
     {
-      name: "Phospholipid Bilayer",
-      description: "Forms the basic structure with hydrophilic heads and hydrophobic tails",
-      function: "Selective permeability barrier",
-      color: "#2196F3"
+      id: "phospholipids",
+      title: "الفوسفوليبيدات",
+      description: "تشكل الطبقة المزدوجة الأساسية للغشاء البيلازمي",
+      details: "جزيئات لها رأس محب للماء وذيل كاره للماء، تنتظم في طبقتين متقابلتين",
+      color: "#4CAF50",
+      icon: "circle.grid.2x2"
     },
     {
-      name: "Integral Proteins",
-      description: "Span the entire membrane thickness",
-      function: "Transport channels, carriers, and receptors",
-      color: "#4CAF50"
+      id: "proteins",
+      title: "البروتينات",
+      description: "تؤدي وظائف متنوعة في النقل والتواصل",
+      details: "بروتينات غشائية تساعد في النقل النشط والسلبي عبر الغشاء",
+      color: "#2196F3",
+      icon: "gear.circle"
     },
     {
-      name: "Peripheral Proteins",
-      description: "Attached to membrane surface",
-      function: "Enzymatic activity and structural support",
-      color: "#FF9800"
+      id: "cholesterol",
+      title: "الكوليسترول",
+      description: "ينظم مرونة وسيولة الغشاء",
+      details: "يحافظ على التوازن المناسب لمرونة الغشاء في درجات الحرارة المختلفة",
+      color: "#FF9800",
+      icon: "hexagon"
     },
     {
-      name: "Cholesterol",
-      description: "Steroid molecule embedded in bilayer",
-      function: "Membrane fluidity regulation",
-      color: "#9C27B0"
-    },
-    {
-      name: "Carbohydrates",
-      description: "Attached to proteins and lipids",
-      function: "Cell recognition and signaling",
-      color: "#F44336"
+      id: "carbohydrates",
+      title: "الكربوهيدرات",
+      description: "تلعب دوراً في التعرف الخلوي",
+      details: "ترتبط بالبروتينات والدهون لتكوين علامات تعريف خلوية",
+      color: "#9C27B0",
+      icon: "star.circle"
     }
   ];
 
   const renderComponent = (component: typeof membraneComponents[0], index: number) => (
-    <View key={index} style={[styles.componentCard, { borderLeftColor: component.color }]}>
+    <View key={component.id} style={[styles.componentCard, { borderLeftColor: component.color }]}>
       <View style={styles.componentHeader}>
-        <View style={[styles.componentIndicator, { backgroundColor: component.color }]} />
-        <Text style={styles.componentName}>{component.name}</Text>
+        <View style={[styles.componentIcon, { backgroundColor: component.color }]}>
+          <IconSymbol name={component.icon as any} color="white" size={24} />
+        </View>
+        <View style={styles.componentInfo}>
+          <Text style={styles.componentTitle}>{component.title}</Text>
+          <Text style={styles.componentDescription}>{component.description}</Text>
+        </View>
       </View>
-      <Text style={styles.componentDescription}>{component.description}</Text>
-      <View style={styles.functionContainer}>
-        <Text style={styles.functionLabel}>Function:</Text>
-        <Text style={styles.functionText}>{component.function}</Text>
-      </View>
+      <Text style={styles.componentDetails}>{component.details}</Text>
     </View>
   );
 
@@ -58,10 +61,12 @@ export default function MembraneDetailsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "Membrane Structure",
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-          presentation: "modal",
+          title: "تفاصيل الغشاء البيلازمي",
+          headerStyle: {
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          },
+          headerTintColor: '#1565C0',
+          headerBackTitle: "رجوع",
         }}
       />
       
@@ -71,55 +76,66 @@ export default function MembraneDetailsScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Header Section */}
           <View style={styles.headerSection}>
-            <IconSymbol name="circle.grid.cross" color={colors.accent} size={48} />
-            <Text style={styles.title}>Cell Membrane Components</Text>
-            <Text style={styles.subtitle}>
-              Understanding the structure that enables selective transport
+            <Text style={styles.pageTitle}>مكونات الغشاء البيلازمي</Text>
+            <Text style={styles.pageDescription}>
+              الغشاء البيلازمي هو الحاجز الانتقائي الذي يحيط بالخلية ويتحكم في دخول وخروج المواد
             </Text>
           </View>
 
+          {/* Educational Image */}
+          <View style={styles.imageSection}>
+            <Image 
+              source={require('@/assets/images/1db08fdc-a3c6-4a64-b77a-5b5979192b19.jpeg')}
+              style={styles.educationalImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.imageCaption}>
+              جدول يوضح طرق انتقال المواد المختلفة عبر الغشاء البيلازمي
+            </Text>
+          </View>
+
+          {/* Membrane Components */}
           <View style={styles.componentsSection}>
+            <Text style={styles.sectionTitle}>المكونات الرئيسية</Text>
             {membraneComponents.map(renderComponent)}
           </View>
 
-          <View style={styles.keyPointsSection}>
-            <Text style={styles.sectionTitle}>Key Points</Text>
-            <View style={styles.keyPointsList}>
-              <View style={styles.keyPoint}>
-                <IconSymbol name="checkmark.circle.fill" color={colors.accent} size={20} />
-                <Text style={styles.keyPointText}>
-                  Fluid mosaic model describes membrane structure
-                </Text>
+          {/* Transport Summary */}
+          <View style={styles.summarySection}>
+            <Text style={styles.sectionTitle}>ملخص طرق النقل</Text>
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>الانتشار:</Text>
+                <Text style={styles.summaryText}>لا يحتاج طاقة - من التركيز العالي للمنخفض</Text>
               </View>
-              <View style={styles.keyPoint}>
-                <IconSymbol name="checkmark.circle.fill" color={colors.accent} size={20} />
-                <Text style={styles.keyPointText}>
-                  Selective permeability controls what enters and exits
-                </Text>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>الخاصية الاسموزية:</Text>
+                <Text style={styles.summaryText}>نقل الماء عبر الغشاء شبه النفاذ</Text>
               </View>
-              <View style={styles.keyPoint}>
-                <IconSymbol name="checkmark.circle.fill" color={colors.accent} size={20} />
-                <Text style={styles.keyPointText}>
-                  Temperature affects membrane fluidity
-                </Text>
-              </View>
-              <View style={styles.keyPoint}>
-                <IconSymbol name="checkmark.circle.fill" color={colors.accent} size={20} />
-                <Text style={styles.keyPointText}>
-                  Proteins facilitate specific transport processes
-                </Text>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>النقل النشط:</Text>
+                <Text style={styles.summaryText}>يحتاج طاقة - ضد التدرج التركيزي</Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.actionSection}>
+          {/* Action Buttons */}
+          <View style={styles.actionsSection}>
             <Button
               variant="primary"
-              onPress={() => router.back()}
-              style={styles.backButton}
+              onPress={() => router.push("/interactive-demo")}
+              style={styles.actionButton}
             >
-              Back to Main
+              العرض التفاعلي
+            </Button>
+            <Button
+              variant="outline"
+              onPress={() => router.back()}
+              style={styles.actionButton}
+            >
+              العودة للرئيسية
             </Button>
           </View>
         </ScrollView>
@@ -131,7 +147,7 @@ export default function MembraneDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   scrollView: {
     flex: 1,
@@ -141,98 +157,135 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 16,
+    padding: 20,
   },
-  title: {
-    fontSize: 28,
+  pageTitle: {
+    fontSize: 26,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#1565C0',
     textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 8,
+    marginBottom: 12,
+    writingDirection: 'rtl',
   },
-  subtitle: {
+  pageDescription: {
     fontSize: 16,
-    color: colors.grey,
+    color: '#424242',
     textAlign: 'center',
     lineHeight: 24,
+    writingDirection: 'rtl',
+  },
+  imageSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 16,
+    padding: 16,
+  },
+  educationalImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+  },
+  imageCaption: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 12,
+    fontStyle: 'italic',
+    writingDirection: 'rtl',
   },
   componentsSection: {
-    marginBottom: 30,
-  },
-  componentCard: {
-    backgroundColor: colors.backgroundAlt,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    elevation: 2,
-  },
-  componentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  componentIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  componentName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  componentDescription: {
-    fontSize: 16,
-    color: colors.text,
-    lineHeight: 22,
-    marginBottom: 12,
-  },
-  functionContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  functionLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: colors.accent,
-    marginRight: 8,
-  },
-  functionText: {
-    fontSize: 14,
-    color: colors.grey,
-    flex: 1,
-  },
-  keyPointsSection: {
-    marginBottom: 30,
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#1565C0',
     marginBottom: 16,
+    textAlign: 'center',
+    writingDirection: 'rtl',
   },
-  keyPointsList: {
-    gap: 12,
+  componentCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
   },
-  keyPoint: {
+  componentHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  keyPointText: {
-    fontSize: 16,
-    color: colors.text,
-    marginLeft: 12,
+  componentIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  componentInfo: {
     flex: 1,
-    lineHeight: 22,
   },
-  actionSection: {
+  componentTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    marginBottom: 4,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  componentDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  componentDetails: {
+    fontSize: 15,
+    color: '#424242',
+    lineHeight: 22,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  summarySection: {
+    marginBottom: 24,
+  },
+  summaryCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    padding: 16,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+  },
+  summaryRow: {
+    marginBottom: 12,
+  },
+  summaryLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    marginBottom: 4,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  summaryText: {
+    fontSize: 15,
+    color: '#424242',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  actionsSection: {
+    gap: 12,
     marginTop: 20,
   },
-  backButton: {
+  actionButton: {
     width: '100%',
   },
 });

@@ -1,14 +1,19 @@
+
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 export const colors = {
-  primary: '#162456',    // Material Blue
-  secondary: '#193cb8',  // Darker Blue
-  accent: '#64B5F6',     // Light Blue
-  background: '#101824',  // Keeping dark background
-  backgroundAlt: '#162133',  // Keeping dark background
-  text: '#e3e3e3',       // Keeping light text
-  grey: '#90CAF9',       // Light Blue Grey
-  card: '#193cb8',       // Keeping dark card background
+  primary: '#1565C0',        // Blue for primary elements
+  secondary: '#D32F2F',      // Red for secondary elements (matching school colors)
+  accent: '#FFA726',         // Orange for accents
+  background: 'rgba(255, 255, 255, 0.95)',  // Semi-transparent white
+  backgroundAlt: 'rgba(255, 255, 255, 0.9)', // Alternative background
+  text: '#1565C0',           // Blue text for headers
+  textSecondary: '#424242',  // Dark gray for body text
+  grey: '#666666',           // Gray for secondary text
+  card: 'rgba(255, 255, 255, 0.9)', // Card background
+  success: '#4CAF50',        // Green for success
+  warning: '#FF9800',        // Orange for warnings
+  error: '#F44336',          // Red for errors
 };
 
 export const buttonStyles = StyleSheet.create({
@@ -50,15 +55,17 @@ export const commonStyles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'center',
     color: colors.text,
-    marginBottom: 10
+    marginBottom: 10,
+    writingDirection: 'rtl',
   },
   text: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.text,
+    color: colors.textSecondary,
     marginBottom: 8,
     lineHeight: 24,
     textAlign: 'center',
+    writingDirection: 'rtl',
   },
   section: {
     width: '100%',
@@ -71,7 +78,7 @@ export const commonStyles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   card: {
-    backgroundColor: colors.backgroundAlt,
+    backgroundColor: colors.card,
     borderColor: colors.grey,
     borderWidth: 1,
     borderRadius: 10,
@@ -84,6 +91,30 @@ export const commonStyles = StyleSheet.create({
   icon: {
     width: 60,
     height: 60,
-    tintColor: "white",
+    tintColor: colors.primary,
+  },
+  // Arabic text styles
+  arabicTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    marginBottom: 12,
+  },
+  arabicText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    lineHeight: 24,
+  },
+  arabicSubtitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.secondary,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    marginBottom: 8,
   },
 });

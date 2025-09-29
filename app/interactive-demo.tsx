@@ -1,10 +1,10 @@
 
-import React, { useState } from "react";
-import { Stack, router } from "expo-router";
-import { ScrollView, StyleSheet, View, Text, Pressable, Animated } from "react-native";
 import { IconSymbol } from "@/components/IconSymbol";
+import { Stack, router } from "expo-router";
 import { Button } from "@/components/button";
 import { commonStyles, colors } from "@/styles/commonStyles";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, View, Text, Pressable, Animated } from "react-native";
 
 export default function InteractiveDemoScreen() {
   const [selectedDemo, setSelectedDemo] = useState<string | null>(null);
@@ -13,55 +13,45 @@ export default function InteractiveDemoScreen() {
   const demos = [
     {
       id: "diffusion",
-      title: "Simple Diffusion",
-      description: "Molecules move from high to low concentration",
-      example: "Oxygen entering cells",
+      title: "عرض الانتشار",
+      description: "شاهد كيف تنتشر الجزيئات من التركيز العالي إلى المنخفض",
+      example: "مثل انتشار قطرة الحبر في الماء",
+      color: "#4CAF50",
+      icon: "arrow.right.circle",
       steps: [
-        "High concentration outside cell",
-        "Molecules cross membrane freely",
-        "Equilibrium reached",
-        "No energy required"
-      ],
-      color: "#4CAF50"
+        "ضع قطرة حبر في كأس ماء",
+        "لاحظ انتشار اللون تدريجياً",
+        "الجزيئات تتحرك من التركيز العالي للمنخفض",
+        "لا تحتاج هذه العملية لطاقة خارجية"
+      ]
     },
     {
-      id: "facilitated",
-      title: "Facilitated Diffusion",
-      description: "Transport through protein channels",
-      example: "Glucose entering cells",
+      id: "osmosis",
+      title: "عرض الخاصية الاسموزية",
+      description: "تعلم كيف ينتقل الماء عبر الأغشية شبه النفاذة",
+      example: "مثل وضع الخيار في الماء المالح",
+      color: "#2196F3",
+      icon: "drop.circle",
       steps: [
-        "Molecule binds to carrier protein",
-        "Protein changes shape",
-        "Molecule released inside cell",
-        "Protein returns to original shape"
-      ],
-      color: "#2196F3"
+        "ضع قطعة خيار في ماء مالح",
+        "لاحظ انكماش الخيار بعد فترة",
+        "الماء يخرج من الخيار للماء المالح",
+        "هذا بسبب اختلاف التركيز"
+      ]
     },
     {
       id: "active",
-      title: "Active Transport",
-      description: "Energy-driven transport against gradient",
-      example: "Sodium-Potassium pump",
+      title: "عرض النقل النشط",
+      description: "اكتشف كيف تنقل الخلايا المواد ضد التدرج التركيزي",
+      example: "مثل خياشيم الأسماك التي تزيل الملح",
+      color: "#FF9800",
+      icon: "bolt.circle",
       steps: [
-        "ATP provides energy",
-        "Protein pump changes conformation",
-        "Ions moved against gradient",
-        "Concentration gradient maintained"
-      ],
-      color: "#FF9800"
-    },
-    {
-      id: "endocytosis",
-      title: "Endocytosis",
-      description: "Cell membrane engulfs materials",
-      example: "White blood cells eating bacteria",
-      steps: [
-        "Membrane surrounds material",
-        "Vesicle forms inside cell",
-        "Material transported internally",
-        "Vesicle may fuse with organelles"
-      ],
-      color: "#9C27B0"
+        "الخلايا تستخدم الطاقة (ATP)",
+        "تنقل المواد من التركيز المنخفض للعالي",
+        "مثل إزالة الملح من جسم السمك",
+        "عملية حيوية مهمة للحياة"
+      ]
     }
   ];
 
@@ -81,92 +71,86 @@ export default function InteractiveDemoScreen() {
   };
 
   const renderDemo = (demo: typeof demos[0]) => (
-    <Pressable
-      key={demo.id}
-      style={[
-        styles.demoCard,
-        { borderColor: demo.color },
-        selectedDemo === demo.id && styles.selectedCard
-      ]}
-      onPress={() => {
-        setSelectedDemo(selectedDemo === demo.id ? null : demo.id);
-        if (selectedDemo !== demo.id) {
+    <View key={demo.id} style={[styles.demoCard, { borderColor: demo.color }]}>
+      <Pressable
+        onPress={() => {
+          setSelectedDemo(selectedDemo === demo.id ? null : demo.id);
           startAnimation();
-        }
-      }}
-    >
-      <View style={styles.demoHeader}>
+        }}
+        style={styles.demoHeader}
+      >
         <View style={[styles.demoIcon, { backgroundColor: demo.color }]}>
-          <IconSymbol name="play.circle" color="white" size={24} />
+          <IconSymbol name={demo.icon as any} color="white" size={28} />
         </View>
         <View style={styles.demoInfo}>
           <Text style={styles.demoTitle}>{demo.title}</Text>
           <Text style={styles.demoDescription}>{demo.description}</Text>
-          <Text style={styles.demoExample}>Example: {demo.example}</Text>
+          <Text style={styles.demoExample}>{demo.example}</Text>
         </View>
-      </View>
+        <IconSymbol 
+          name={selectedDemo === demo.id ? "chevron.up" : "chevron.down"} 
+          color="#1565C0" 
+          size={24} 
+        />
+      </Pressable>
 
       {selectedDemo === demo.id && (
-        <View style={styles.demoDetails}>
-          <Text style={styles.stepsTitle}>Process Steps:</Text>
-          <View style={styles.stepsList}>
-            {demo.steps.map((step, index) => (
-              <Animated.View
-                key={index}
-                style={[
-                  styles.stepItem,
-                  {
-                    opacity: animationValue.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.5, 1],
-                    }),
-                    transform: [{
-                      translateX: animationValue.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 10],
-                      }),
-                    }],
-                  }
-                ]}
-              >
-                <View style={[styles.stepNumber, { backgroundColor: demo.color }]}>
-                  <Text style={styles.stepNumberText}>{index + 1}</Text>
-                </View>
-                <Text style={styles.stepText}>{step}</Text>
-              </Animated.View>
-            ))}
-          </View>
+        <Animated.View 
+          style={[
+            styles.demoSteps,
+            {
+              opacity: animationValue,
+              transform: [{
+                translateY: animationValue.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-20, 0],
+                }),
+              }],
+            }
+          ]}
+        >
+          <Text style={styles.stepsTitle}>خطوات التجربة:</Text>
+          {demo.steps.map((step, index) => (
+            <View key={index} style={styles.stepItem}>
+              <View style={[styles.stepNumber, { backgroundColor: demo.color }]}>
+                <Text style={styles.stepNumberText}>{index + 1}</Text>
+              </View>
+              <Text style={styles.stepText}>{step}</Text>
+            </View>
+          ))}
           
           <View style={styles.animationContainer}>
-            <Animated.View
+            <Animated.View 
               style={[
-                styles.animatedElement,
+                styles.animatedParticle,
                 { backgroundColor: demo.color },
                 {
                   transform: [{
                     translateX: animationValue.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0, 200],
+                      outputRange: [0, 100],
                     }),
                   }],
                 }
               ]}
             />
-            <Text style={styles.animationLabel}>Transport Direction →</Text>
+            <Text style={styles.animationLabel}>محاكاة الحركة</Text>
           </View>
-        </View>
+        </Animated.View>
       )}
-    </Pressable>
+    </View>
   );
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: "Interactive Demo",
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-          presentation: "modal",
+          title: "العرض التفاعلي",
+          headerStyle: {
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          },
+          headerTintColor: '#1565C0',
+          headerBackTitle: "رجوع",
         }}
       />
       
@@ -176,43 +160,51 @@ export default function InteractiveDemoScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Header Section */}
           <View style={styles.headerSection}>
-            <IconSymbol name="play.rectangle" color={colors.accent} size={48} />
-            <Text style={styles.title}>Transport Mechanisms</Text>
-            <Text style={styles.subtitle}>
-              Tap on each method to see how it works
+            <Text style={styles.pageTitle}>التجارب التفاعلية</Text>
+            <Text style={styles.pageDescription}>
+              اكتشف طرق النقل عبر الغشاء البيلازمي من خلال التجارب العملية
             </Text>
           </View>
 
+          {/* Interactive Demos */}
           <View style={styles.demosSection}>
             {demos.map(renderDemo)}
           </View>
 
-          <View style={styles.instructionsSection}>
-            <Text style={styles.instructionsTitle}>How to Use</Text>
-            <View style={styles.instructionsList}>
-              <View style={styles.instruction}>
-                <IconSymbol name="hand.tap" color={colors.accent} size={20} />
-                <Text style={styles.instructionText}>Tap on any transport method</Text>
-              </View>
-              <View style={styles.instruction}>
-                <IconSymbol name="eye" color={colors.accent} size={20} />
-                <Text style={styles.instructionText}>Watch the animation</Text>
-              </View>
-              <View style={styles.instruction}>
-                <IconSymbol name="book" color={colors.accent} size={20} />
-                <Text style={styles.instructionText}>Read the step-by-step process</Text>
-              </View>
+          {/* Tips Section */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.sectionTitle}>نصائح مهمة</Text>
+            <View style={styles.tipCard}>
+              <IconSymbol name="lightbulb" color="#FFA726" size={24} />
+              <Text style={styles.tipText}>
+                جرب هذه التجارب في المنزل تحت إشراف الكبار لفهم أفضل
+              </Text>
+            </View>
+            <View style={styles.tipCard}>
+              <IconSymbol name="exclamationmark.triangle" color="#EF5350" size={24} />
+              <Text style={styles.tipText}>
+                تذكر أن النقل النشط يحتاج طاقة بينما الانتشار والاسموزية لا يحتاجان
+              </Text>
             </View>
           </View>
 
-          <View style={styles.actionSection}>
+          {/* Action Buttons */}
+          <View style={styles.actionsSection}>
             <Button
               variant="primary"
-              onPress={() => router.back()}
-              style={styles.backButton}
+              onPress={() => router.push("/quiz")}
+              style={styles.actionButton}
             >
-              Back to Main
+              اختبر معلوماتك
+            </Button>
+            <Button
+              variant="outline"
+              onPress={() => router.back()}
+              style={styles.actionButton}
+            >
+              العودة للرئيسية
             </Button>
           </View>
         </ScrollView>
@@ -224,7 +216,7 @@ export default function InteractiveDemoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   scrollView: {
     flex: 1,
@@ -234,45 +226,47 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
-    marginBottom: 30,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.text,
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.grey,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  demosSection: {
-    marginBottom: 30,
-  },
-  demoCard: {
-    backgroundColor: colors.backgroundAlt,
+    marginBottom: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderRadius: 16,
     padding: 20,
+  },
+  pageTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    textAlign: 'center',
+    marginBottom: 12,
+    writingDirection: 'rtl',
+  },
+  pageDescription: {
+    fontSize: 16,
+    color: '#424242',
+    textAlign: 'center',
+    lineHeight: 24,
+    writingDirection: 'rtl',
+  },
+  demosSection: {
+    marginBottom: 24,
+  },
+  demoCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 16,
     marginBottom: 16,
     borderWidth: 2,
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 4,
-  },
-  selectedCard: {
-    borderWidth: 3,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+    elevation: 6,
+    overflow: 'hidden',
   },
   demoHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    padding: 20,
   },
   demoIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -283,39 +277,43 @@ const styles = StyleSheet.create({
   demoTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 4,
+    color: '#1565C0',
+    marginBottom: 6,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   demoDescription: {
-    fontSize: 16,
-    color: colors.text,
+    fontSize: 15,
+    color: '#424242',
     marginBottom: 4,
-    lineHeight: 22,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   demoExample: {
     fontSize: 14,
-    color: colors.grey,
+    color: '#666',
     fontStyle: 'italic',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
-  demoDetails: {
-    marginTop: 20,
-    paddingTop: 20,
+  demoSteps: {
+    padding: 20,
+    paddingTop: 0,
     borderTopWidth: 1,
-    borderTopColor: colors.grey + '30',
+    borderTopColor: '#E0E0E0',
   },
   stepsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#1565C0',
     marginBottom: 16,
-  },
-  stepsList: {
-    gap: 12,
-    marginBottom: 20,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   stepItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    marginBottom: 12,
   },
   stepNumber: {
     width: 28,
@@ -331,61 +329,66 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   stepText: {
-    fontSize: 16,
-    color: colors.text,
     flex: 1,
+    fontSize: 15,
+    color: '#424242',
     lineHeight: 22,
-    marginTop: 4,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   animationContainer: {
-    height: 60,
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    paddingHorizontal: 16,
-    position: 'relative',
+    alignItems: 'center',
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 12,
   },
-  animatedElement: {
+  animatedParticle: {
     width: 20,
     height: 20,
     borderRadius: 10,
+    marginBottom: 8,
   },
   animationLabel: {
-    position: 'absolute',
-    bottom: 8,
-    left: 16,
-    fontSize: 12,
-    color: colors.grey,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    writingDirection: 'rtl',
   },
-  instructionsSection: {
-    backgroundColor: colors.backgroundAlt,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 30,
+  tipsSection: {
+    marginBottom: 24,
   },
-  instructionsTitle: {
-    fontSize: 20,
+  sectionTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#1565C0',
     marginBottom: 16,
+    textAlign: 'center',
+    writingDirection: 'rtl',
   },
-  instructionsList: {
-    gap: 12,
-  },
-  instruction: {
+  tipCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
   },
-  instructionText: {
-    fontSize: 16,
-    color: colors.text,
+  tipText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#424242',
     marginLeft: 12,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
-  actionSection: {
+  actionsSection: {
+    gap: 12,
     marginTop: 20,
   },
-  backButton: {
+  actionButton: {
     width: '100%',
   },
 });
